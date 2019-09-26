@@ -54,13 +54,13 @@ import web.client.table._
 /**
   * Calibration queue table
   */
-final case class CalQueueTable(
-  queueId: QueueId,
-  data: CalQueueFocus
-) extends ReactProps {
-  import CalQueueTable._
+final case class CalQueueTableAgGrid(
+                                queueId: QueueId,
+                                data: CalQueueFocus
+                              ) extends ReactProps {
+  import CalQueueTableAgGrid._
 
-  @inline def render: VdomElement = CalQueueTable.component(this)
+  @inline def render: VdomElement = CalQueueTableAgGrid.component(this)
 
   val rowCount: Int = data.seqs.size
 
@@ -143,12 +143,13 @@ final case class CalQueueTable(
 
 }
 
-object CalQueueTable {
-  sealed trait TableColumn extends Product with Serializable
-  case object RemoveSeqColumn extends TableColumn
-  case object StateSeqColumn extends TableColumn
-  case object ObsIdColumn extends TableColumn
-  case object InstrumentColumn extends TableColumn
+object CalQueueTableAgGrid {
+  import CalQueueTable.{TableColumn, RemoveSeqColumn, StateSeqColumn, ObsIdColumn, InstrumentColumn}
+//  sealed trait TableColumn extends Product with Serializable
+//  case object RemoveSeqColumn extends TableColumn
+//  case object StateSeqColumn extends TableColumn
+//  case object ObsIdColumn extends TableColumn
+//  case object InstrumentColumn extends TableColumn
 
   private val RemoveColumnWidth  = 30.0
   private val StateColumnWidth   = 25.0
@@ -198,7 +199,7 @@ object CalQueueTable {
   val ro: NonEmptyList[ColumnMeta[TableColumn]] =
     NonEmptyList.of(StateSeqMeta, ObsIdColumnMeta, InstrumentColumnMeta)
 
-  type Props = CalQueueTable
+  type Props = CalQueueTableAgGrid
 
   @Lenses
   final case class State(tableState:        TableState[TableColumn],
@@ -248,7 +249,7 @@ object CalQueueTable {
     }
 
     def unapply(
-      l: CalQueueRow): Option[(Observation.Id, Instrument, SequenceState)] =
+                 l: CalQueueRow): Option[(Observation.Id, Instrument, SequenceState)] =
       Some((l.obsId, l.instrument, l.status))
 
     def Empty: CalQueueRow =
@@ -271,7 +272,7 @@ object CalQueueTable {
     SeqexecCircuit.dispatchCB(RequestRemoveSeqCal(qid, sid))
 
   def removeSeqRenderer(
-    p: Props): CellRenderer[js.Object, js.Object, CalQueueRow] =
+                         p: Props): CellRenderer[js.Object, js.Object, CalQueueRow] =
     (_, _, _, r: CalQueueRow, _) =>
       <.div(
         SeqexecStyles.centeredCell,
@@ -291,13 +292,13 @@ object CalQueueTable {
                 _.removeSeqQueue === RemoveSeqQueue.RemoveSeqQueueInFlight)
               .fold(IconTimes.copyIcon(
                 onClick                      = removeSeq(p.queueId, r.obsId)))(_ =>
-                IconRefresh.copyIcon(loading = true))
+                                                                                 IconRefresh.copyIcon(loading = true))
               .some
-          ))
-    )
+            ))
+        )
 
   private def statusIconRenderer
-    : CellRenderer[js.Object, js.Object, CalQueueRow] =
+  : CellRenderer[js.Object, js.Object, CalQueueRow] =
     (_, _, _, row: CalQueueRow, _) => {
       val selectedIconStyle = SeqexecStyles.selectedIcon
       val icon: TagMod =
@@ -320,17 +321,17 @@ object CalQueueTable {
         SeqexecStyles.centeredCell,
         SeqexecStyles.fullCell,
         icon
-      )
+        )
     }
 
   class CalQueueTableBackend(b: BackendScope[Props, State])
-      extends TimerSupport {
+    extends TimerSupport {
 
     private def colBuilder(
-      props: Props,
-      state: State,
-      size:  Size
-    ): ColumnRenderArgs[TableColumn] => Table.ColumnArg = tb => {
+                            props: Props,
+                            state: State,
+                            size:  Size
+                          ): ColumnRenderArgs[TableColumn] => Table.ColumnArg = tb => {
       def updateState(s: TableState[TableColumn]): Callback =
         b.setStateL(State.tableState)(s) *>
           SeqexecCircuit.dispatchCB(UpdateCalTableState(props.queueId, s))
@@ -353,7 +354,7 @@ object CalQueueTable {
               headerRenderer = resizableHeaderRenderer(
                 state.tableState.resizeColumn(meta.column, size, updateState)),
               className = SeqexecStyles.queueTextColumn.htmlClass
-            ))
+              ))
         case ColumnRenderArgs(meta, _, width, false) =>
           Column(
             Column.propsNoFlex(
@@ -365,8 +366,8 @@ object CalQueueTable {
                 if (meta.column === InstrumentColumn)
                   SeqexecStyles.queueTextColumn.htmlClass
                 else ""
+              )
             )
-          )
       }
     }
 
@@ -389,13 +390,13 @@ object CalQueueTable {
         case (-1, _) =>
           SeqexecStyles.headerRowStyle
         case (_, CalQueueRow(i, _, _))
-            if p.addedRows.contains(i) && !s.animationRendered =>
+          if p.addedRows.contains(i) && !s.animationRendered =>
           SeqexecStyles.stepRow |+| SeqexecStyles.draggableRow |+| SeqexecStyles.calRowBackground
         case (_, CalQueueRow(i, _, _))
-            if p.movedRows.contains(i) && !s.animationRendered =>
+          if p.movedRows.contains(i) && !s.animationRendered =>
           SeqexecStyles.stepRow |+| SeqexecStyles.draggableRow |+| SeqexecStyles.calRowBackground
         case (i, CalQueueRow(_, _, _))
-            if p.afterDeletedRows.contains(i) && !s.animationRendered =>
+          if p.afterDeletedRows.contains(i) && !s.animationRendered =>
           SeqexecStyles.stepRow |+| SeqexecStyles.draggableRow |+| SeqexecStyles.calRowBackground
         case (i, _) if p.upLifted.contains(i) && !s.animationRendered =>
           SeqexecStyles.stepRow |+| SeqexecStyles.draggableRow |+| SeqexecStyles.deletedRow
@@ -424,7 +425,7 @@ object CalQueueTable {
             SeqexecStyles.noRowsSegment,
             ^.height := size.height.px,
             "Cal queue empty"
-        ),
+            ),
         overscanRowCount = SeqexecStyles.overscanRowCount,
         height           = max(1, size.height.toInt),
         rowCount         = p.rowCount,
@@ -441,17 +442,17 @@ object CalQueueTable {
           if (p.clearOp && !s.animationRendered)
             SeqexecStyles.calTableBorder.htmlClass
           else ""
-      )
+        )
 
     def requestMove(c: IndexChange): Callback =
       (b.props >>= { p =>
         p.data.seqs
-          .map(_.id)
-          .lift(c.oldIndex)
-          .map(i =>
-            SeqexecCircuit.dispatchCB(
-              RequestMoveCal(p.queueId, i, c.newIndex - c.oldIndex)))
-          .getOrEmpty
+         .map(_.id)
+         .lift(c.oldIndex)
+         .map(i =>
+                SeqexecCircuit.dispatchCB(
+                  RequestMoveCal(p.queueId, i, c.newIndex - c.oldIndex)))
+         .getOrEmpty
       }) *> b.modState(_.copy(moved = c.some))
 
     def resetAnim: Callback =
@@ -485,8 +486,8 @@ object CalQueueTable {
               val sortableList = SortableContainer.wrapC(
                 Table.component,
                 s.tableState
-                  .columnBuilder(size, colBuilder(p, s, size))
-                  .map(_.vdomElement))
+                 .columnBuilder(size, colBuilder(p, s, size))
+                 .map(_.vdomElement))
 
               // If distance is 0 we can miss some events
               val cp = SortableContainer.Props(
@@ -495,24 +496,24 @@ object CalQueueTable {
                 helperClass =
                   (SeqexecStyles.noselect |+| SeqexecStyles.draggedRowHelper).htmlClass,
                 distance = 3
-              )
+                )
               sortableList(cp)(table(p, s)(size))
             } else {
               <.div()
             }
           },
           onResize = _ => Callback.empty
-        ))
+          ))
 
   }
 
   def initialState(p: Props): State =
     if (p.data.loggedIn) {
       State.DefaultEditable
-        .copy(tableState = p.data.tableState)
+           .copy(tableState = p.data.tableState)
     } else {
       State.DefaultRO
-        .copy(tableState = p.data.tableState)
+           .copy(tableState = p.data.tableState)
     }
 
   protected val component = ScalaComponent

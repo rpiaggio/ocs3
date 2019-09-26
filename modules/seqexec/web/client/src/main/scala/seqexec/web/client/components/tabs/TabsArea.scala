@@ -40,9 +40,9 @@ object TabsArea {
               SequenceTabContent(p.router, t): VdomNode
             case t =>
               CalQueueTabContent(
-                CalQueueTabContent.Props(t.canOperate,
-                                         t.active,
-                                         t.logDisplayed)): VdomNode
+                t.canOperate,
+                t.active,
+                t.logDisplayed): VdomNode
           }: _*))
     ))
     .configure(Reusability.shouldComponentUpdate)

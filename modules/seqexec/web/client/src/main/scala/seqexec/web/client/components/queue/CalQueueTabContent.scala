@@ -6,7 +6,6 @@ package seqexec.web.client.components.queue
 import cats.implicits._
 import japgolly.scalajs.react.vdom.html_<^._
 import japgolly.scalajs.react.ScalaComponent
-import japgolly.scalajs.react.component.Scala.Unmounted
 import japgolly.scalajs.react.Reusability
 import react.common.implicits._
 import seqexec.model.CalibrationQueueId
@@ -20,20 +19,27 @@ import seqexec.web.client.model.SectionVisibilityState
 import seqexec.web.client.model.TabSelected
 import seqexec.web.client.components.SeqexecStyles
 import seqexec.web.client.reusability._
+import web.client.ReactProps
 
 /**
   * Content of the queue tab
   */
+final case class CalQueueTabContent(
+  canOperate:   Boolean,
+  active:       TabSelected,
+  logDisplayed: SectionVisibilityState
+) extends ReactProps {
+  @inline def render: VdomElement = CalQueueTabContent.component(this)
+
+  protected[queue] val dayCalConnectOps =
+    SeqexecCircuit.connect(
+      SeqexecCircuit.calQueueControlReader(CalibrationQueueId))
+  protected[queue] val dayCalConnect =
+    SeqexecCircuit.connect(SeqexecCircuit.calQueueReader(CalibrationQueueId))
+}
+
 object CalQueueTabContent {
-  final case class Props(canOperate:   Boolean,
-                         active:       TabSelected,
-                         logDisplayed: SectionVisibilityState) {
-    protected[queue] val dayCalConnectOps =
-      SeqexecCircuit.connect(
-        SeqexecCircuit.calQueueControlReader(CalibrationQueueId))
-    protected[queue] val dayCalConnect =
-      SeqexecCircuit.connect(SeqexecCircuit.calQueueReader(CalibrationQueueId))
-  }
+  type Props = CalQueueTabContent
 
   implicit val propsReuse: Reusability[Props] = Reusability.derive[Props]
 
@@ -41,7 +47,7 @@ object CalQueueTabContent {
     IconMessage
       .Props(IconInbox, Some("Work in progress"), IconMessage.Style.Warning))
 
-  private val component = ScalaComponent
+  protected val component = ScalaComponent
     .builder[Props]("CalQueueTabContent")
     .stateless
     .render_P { p =>
@@ -67,7 +73,8 @@ object CalQueueTabContent {
             case Some(x) =>
               <.div(
                 ^.height := "100%",
-                CalQueueTable(CalQueueTable.Props(CalibrationQueueId, x))
+                CalQueueTableAgGrid(CalibrationQueueId, x),
+                CalQueueTable(CalibrationQueueId, x)
               )
             case _ => defaultContent
           })
@@ -76,7 +83,4 @@ object CalQueueTabContent {
     }
     .configure(Reusability.shouldComponentUpdate)
     .build
-
-  def apply(p: Props): Unmounted[Props, Unit, Unit] =
-    component(p)
 }

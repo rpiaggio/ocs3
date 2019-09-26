@@ -337,7 +337,9 @@ lazy val seqexec_web_client = project.in(file("modules/seqexec/web/client"))
       "semantic-ui-visibility"  -> LibraryVersions.semanticUI,
       "semantic-ui-transition"  -> LibraryVersions.semanticUI,
       "semantic-ui-dimmer"      -> LibraryVersions.semanticUI,
-      "semantic-ui-less"        -> LibraryVersions.semanticUI
+      "semantic-ui-less"        -> LibraryVersions.semanticUI,
+      "ag-grid-community"       -> LibraryVersions.agGrid,
+      "ag-grid-react"           -> LibraryVersions.agGrid
     ),
     // NPM libs for development, mostly to let webpack do its magic
     npmDevDependencies in Compile ++= Seq(

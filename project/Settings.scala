@@ -74,6 +74,7 @@ object Settings {
     val semanticUI              = "2.3.1"
     val ocsVersion              = "2019101.1.4"
     val uglifyJs                = "1.2.4"
+    val agGrid                  = "21.2.1"
 
     val apacheXMLRPC            = "3.1.3"
     val opencsv                 = "2.1"
