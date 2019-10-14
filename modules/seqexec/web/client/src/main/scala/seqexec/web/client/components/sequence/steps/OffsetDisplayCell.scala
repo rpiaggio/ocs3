@@ -43,8 +43,8 @@ object OffsetsDisplayCell {
     .render_P { p =>
       p.offsetsDisplay match {
         case OffsetsDisplay.DisplayOffsets(offsetWidth) =>
-          val offsetP = p.step.offsetP
-          val offsetQ = p.step.offsetQ
+          val offsetP = p.step.offset[OffsetAxis.P]
+          val offsetQ = p.step.offset[OffsetAxis.Q]
           val guiding = p.step.guiding
 
           <.div(
@@ -59,7 +59,7 @@ object OffsetsDisplayCell {
                 <.div(
                   ^.width := pLabelWidth.px,
                   SeqexecStyles.inlineBlock,
-                  offsetAxis(OffsetAxis.AxisP)
+                  offsetAxis[OffsetAxis.P]
                 ),
                 <.div(
                   ^.width := offsetWidth.px,
@@ -72,7 +72,7 @@ object OffsetsDisplayCell {
                 <.div(
                   ^.width := qLabelWidth.px,
                   SeqexecStyles.inlineBlock,
-                  offsetAxis(OffsetAxis.AxisQ)
+                  offsetAxis[OffsetAxis.Q]
                 ),
                 <.div(
                   ^.width := offsetWidth.px,

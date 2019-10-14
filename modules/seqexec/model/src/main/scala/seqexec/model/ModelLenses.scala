@@ -6,10 +6,7 @@ package seqexec.model
 import cats._
 import cats.implicits._
 import gsp.math.syntax.all._
-import monocle.Lens
-import monocle.Optional
-import monocle.Prism
-import monocle.Traversal
+import monocle.{Iso, Lens, Optional, Prism, Traversal}
 import monocle.macros.GenLens
 import monocle.macros.GenPrism
 import monocle.function.At.at
@@ -18,7 +15,6 @@ import monocle.function.FilterIndex.filterIndex
 import monocle.unsafe.MapTraversal._
 import monocle.std.option.some
 import monocle.std.string._
-import monocle.Iso
 import seqexec.model.enum._
 import seqexec.model.events._
 
@@ -147,10 +143,9 @@ trait ModelLenses {
     paramValueL(SystemName.Observe.withParam("object")) ^<-? // find the target name
     some                                                     // focus on the option
 
-  private[model] def telescopeOffsetPI: Iso[Double, TelescopeOffset.P] =
-    Iso(TelescopeOffset.P.apply)(_.value)
-  private[model] def telescopeOffsetQI: Iso[Double, TelescopeOffset.Q] =
-    Iso(TelescopeOffset.Q.apply)(_.value)
+  private[model] def offsetI[T <: OffsetType, A <: OffsetAxis]:
+    Iso[Double, Offset[T, A]] =
+      Iso(d => Offset[T, A](d))(_.value)
   val stringToDoubleP: Prism[String, Double] =
     Prism((x: String) => x.parseDoubleOption)(_.show)
 
@@ -248,13 +243,26 @@ trait ModelLenses {
                         stringToDoubleP)
 
   // Lens to find p offset
-  def telescopeOffsetO(x: OffsetAxis): Optional[Step, Double] =
-    stepObserveOptional(SystemName.Telescope, x.configItem, stringToDoubleP)
+  def stepOffsetO[T <: OffsetType, A <: OffsetAxis](
+    implicit resolver: OffsetConfigResolver[T, A]
+  ): Optional[Step, Double] =
+    stepObserveOptional(resolver.systemName, resolver.configItem, stringToDoubleP)
 
-  val telescopeOffsetPO: Optional[Step, TelescopeOffset.P] = telescopeOffsetO(
-    OffsetAxis.AxisP) ^<-> telescopeOffsetPI
-  val telescopeOffsetQO: Optional[Step, TelescopeOffset.Q] = telescopeOffsetO(
-    OffsetAxis.AxisQ) ^<-> telescopeOffsetQI
+  trait OffsetLens[T <: OffsetType, A <: OffsetAxis] {
+    val optional: Optional[Step, Offset[T, A]]
+  }
+  object OffsetLens {
+    private def build[T <: OffsetType, A <: OffsetAxis]
+      (implicit offsetConfigResolver: OffsetConfigResolver[T, A]): OffsetLens[T, A] =
+      new OffsetLens[T, A] {
+        val optional = stepOffsetO[T, A] ^<-> offsetI[T, A]
+      }
+
+    implicit val telescopeOffsetPO: OffsetLens[OffsetType.Telescope, OffsetAxis.P] =
+      build[OffsetType.Telescope, OffsetAxis.P]
+    implicit val telescopeOffsetQO: OffsetLens[OffsetType.Telescope, OffsetAxis.Q] =
+      build[OffsetType.Telescope, OffsetAxis.Q]
+  }
 
   val stringToGuidingP: Prism[String, Guiding] =
     Prism(Guiding.fromString)(_.configValue)

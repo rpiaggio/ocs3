@@ -10,7 +10,7 @@ import gem.enum.GpiDisperser
 import gem.enum.GpiObservingMode
 import gem.enum.GpiFilter
 import seqexec.model.enum.{FPUMode, Guiding, Instrument, StepType}
-import seqexec.model.{NodAndShuffleStatus, NodAndShuffleStep, OffsetAxis, SequenceState, Step, StepId, TelescopeOffset, enumerations}
+import seqexec.model.{NodAndShuffleStatus, NodAndShuffleStep, Offset, OffsetAxis, OffsetType, SequenceState, Step, StepId, enumerations}
 import seqexec.web.client.model.lenses._
 import seqexec.web.client.model.Formatting._
 
@@ -154,23 +154,17 @@ object StepItems {
       }
     }
 
-    def offsetP: TelescopeOffset.P =
-      telescopeOffsetPO.getOption(s).getOrElse(TelescopeOffset.P.Zero)
-    def offsetQ: TelescopeOffset.Q =
-      telescopeOffsetQO.getOption(s).getOrElse(TelescopeOffset.Q.Zero)
+    def offset[A <: OffsetAxis](implicit lens: OffsetLens[OffsetType.Telescope, A]):
+      Offset[OffsetType.Telescope, A] =
+        lens.optional.getOption(s).getOrElse(Offset.Zero[OffsetType.Telescope, A])
     def guiding: Boolean         = telescopeGuidingWithT.exist(_ === Guiding.Guide)(s)
     def readMode: Option[String] = instrumentReadModeO.getOption(s)
 
-    def offsetText(axis: OffsetAxis): String =
-      offsetValueFormat(axis match {
-        case OffsetAxis.AxisP =>
-          telescopeOffsetPO.getOption(s).getOrElse(TelescopeOffset.P.Zero)
-        case OffsetAxis.AxisQ =>
-          telescopeOffsetQO.getOption(s).getOrElse(TelescopeOffset.Q.Zero)
-      })
+    def offsetText[A <: OffsetAxis](implicit lens: OffsetLens[OffsetType.Telescope, A]): String =
+      offsetValueFormat(offset)
 
-    def offsetPText: String = offsetText(OffsetAxis.AxisP)
-    def offsetQText: String = offsetText(OffsetAxis.AxisQ)
+    def offsetPText: String = offsetText[OffsetAxis.P]
+    def offsetQText: String = offsetText[OffsetAxis.Q]
 
     def observingMode: Option[String] =
       instrumentObservingModeO
@@ -193,14 +187,17 @@ object StepItems {
   }
 
   implicit class OffsetFnsOps(val steps: List[Step]) extends AnyVal {
+    private def nonZeroOffset[A <: OffsetAxis](step: Step)
+      (implicit lens: OffsetLens[OffsetType.Telescope, A]): Boolean =
+      lens.optional.exist(_ =!= Offset.Zero[OffsetType.Telescope, A])(step)
+
     // Calculate if there are non-zero offsets
     def areNonZeroOffsets: Boolean =
       steps
         .map(
           s =>
-            telescopeOffsetPO
-              .exist(_ =!= TelescopeOffset.P.Zero)(s) || telescopeOffsetQO
-              .exist(_ =!= TelescopeOffset.Q.Zero)(s))
+            nonZeroOffset[OffsetAxis.P](s) || nonZeroOffset[OffsetAxis.Q](s)
+          )
         .fold(false)(_ || _)
 
     // Offsets to be displayed with a width

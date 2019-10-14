@@ -3,60 +3,60 @@
 
 package seqexec.model
 
-import cats._
+import cats.Eq
 import cats.implicits._
+import seqexec.model.enum.SystemName
 
-sealed trait OffsetAxis {
+sealed trait OffsetType
+object OffsetType {
+  sealed trait Telescope extends OffsetType
+  sealed trait NSNodA extends OffsetType
+  sealed trait NSNodB extends OffsetType
+}
+
+sealed trait OffsetAxis
+object OffsetAxis {
+  sealed trait P extends OffsetAxis
+  sealed trait Q extends OffsetAxis
+}
+
+sealed trait OffsetAxisShow[A <: OffsetAxis] {
+  val show: String
+}
+object OffsetAxisShow {
+  implicit object OffsetAxisPShow extends OffsetAxisShow[OffsetAxis.P] {
+    override val show = "p"
+  }
+
+  implicit object OffsetAxisQShow extends OffsetAxisShow[OffsetAxis.Q] {
+    override val show = "q"
+  }
+}
+
+sealed trait OffsetConfigResolver[T <: OffsetType, A <: OffsetAxis] {
+  val systemName: SystemName
   val configItem: String
 }
-object OffsetAxis {
-  case object AxisP extends OffsetAxis {
+object OffsetConfigResolver {
+  trait TelescopeOffsetConfigResolver[A <: OffsetAxis]
+    extends OffsetConfigResolver[OffsetType.Telescope, A] {
+    val systemName = SystemName.Telescope
+  }
+  implicit object TelescopeOffsetConfigResolverP
+    extends TelescopeOffsetConfigResolver[OffsetAxis.P] {
     val configItem = "p"
   }
-  case object AxisQ extends OffsetAxis {
+  implicit object TelescopeOffsetConfigResolverQ
+    extends TelescopeOffsetConfigResolver[OffsetAxis.Q] {
     val configItem = "q"
   }
-  implicit val show: Show[OffsetAxis] = Show.show {
-    case AxisP => "p"
-    case AxisQ => "q"
-  }
 }
 
-sealed trait Offset {
-  val value: Double
-}
-object Offset {
-  implicit val equal: Eq[Offset] =
-    Eq.by {
-      case p: TelescopeOffset.P => Left(p)
-      case q: TelescopeOffset.Q => Right(q)
-    }
+case class Offset[T <: OffsetType, A <: OffsetAxis](value: Double)
+case object Offset {
+  def Zero[T <: OffsetType, A <: OffsetAxis]: Offset[T, A] =
+    Offset[T, A](0.0)
 
-  def Zero(axis: OffsetAxis): Offset = axis match {
-    case OffsetAxis.AxisP => TelescopeOffset.P.Zero
-    case OffsetAxis.AxisQ => TelescopeOffset.Q.Zero
-  }
-}
-
-// Telescope offsets, roughly based on gem
-final case class TelescopeOffset(p: TelescopeOffset.P, q: TelescopeOffset.Q)
-object TelescopeOffset {
-  /** P component of an angular offset.. */
-  final case class P(value: Double) extends Offset
-  object P {
-    val Zero: P = P(0.0)
-    implicit val order: Order[P] = Order.by(_.value)
-
-  }
-  /** Q component of an angular offset.. */
-  final case class Q(value: Double) extends Offset
-  object Q {
-    val Zero: Q = Q(0.0)
-    implicit val order: Order[Q] = Order.by(_.value)
-
-  }
-  implicit val eq: Eq[TelescopeOffset] =
-    Eq.by(x => (x.p, x.q))
-
-  implicit val show: Show[TelescopeOffset] = Show.fromToString
+  implicit def equal[T <: OffsetType, A <: OffsetAxis]: Eq[Offset[T, A]] =
+    Eq.by(_.value)
 }

@@ -6,9 +6,7 @@ package seqexec.web.client.model
 import cats.Eq
 import cats.implicits._
 import seqexec.model.enum.Instrument
-import seqexec.model.Offset
-import seqexec.model.OffsetAxis
-import seqexec.model.Step
+import seqexec.model.{Offset, OffsetAxis, OffsetAxisShow, OffsetType, Step}
 import seqexec.web.client.model.StepItems._
 import web.client.utils._
 
@@ -29,14 +27,14 @@ object Formatting {
       }
   }
 
-  def offsetAxis(axis: OffsetAxis): String =
-    f"${axis.show}:"
+  def offsetAxis[A <: OffsetAxis](implicit show: OffsetAxisShow[A]): String =
+    f"${show.show}:"
 
-  def offsetValueFormat(off: Offset): String =
+  def offsetValueFormat[T <: OffsetType, A <: OffsetAxis](off: Offset[T, A]): String =
     f" ${off.value}%03.2f″"
 
-  val pLabelWidth: Double = tableTextWidth(offsetAxis(OffsetAxis.AxisP))
-  val qLabelWidth: Double = tableTextWidth(offsetAxis(OffsetAxis.AxisQ))
+  val pLabelWidth: Double = tableTextWidth(offsetAxis[OffsetAxis.P])
+  val qLabelWidth: Double = tableTextWidth(offsetAxis[OffsetAxis.Q])
 
   implicit class OffsetWidthsFnsOps(val steps: List[Step]) extends AnyVal {
     // Calculate the widest offset step
