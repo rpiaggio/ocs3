@@ -10,8 +10,9 @@ import seqexec.model.enum.SystemName
 sealed trait OffsetType
 object OffsetType {
   sealed trait Telescope extends OffsetType
-  sealed trait NSNodA extends OffsetType
-  sealed trait NSNodB extends OffsetType
+  sealed trait NodAndShuffle extends OffsetType
+  sealed trait NSNodA extends NodAndShuffle
+  sealed trait NSNodB extends NodAndShuffle
 }
 
 sealed trait OffsetAxis
@@ -38,7 +39,7 @@ sealed trait OffsetConfigResolver[T <: OffsetType, A <: OffsetAxis] {
   val configItem: String
 }
 object OffsetConfigResolver {
-  trait TelescopeOffsetConfigResolver[A <: OffsetAxis]
+  sealed trait TelescopeOffsetConfigResolver[A <: OffsetAxis]
     extends OffsetConfigResolver[OffsetType.Telescope, A] {
     val systemName = SystemName.Telescope
   }
@@ -50,9 +51,34 @@ object OffsetConfigResolver {
     extends TelescopeOffsetConfigResolver[OffsetAxis.Q] {
     val configItem = "q"
   }
+
+  sealed trait NSOffsetConfigResolver[T <: OffsetType.NodAndShuffle, A <: OffsetAxis]
+    extends OffsetConfigResolver[T, A] {
+    val systemName = SystemName.Instrument
+  }
+  sealed trait NSOffsetConfigResolverA[A <: OffsetAxis]
+    extends NSOffsetConfigResolver[OffsetType.NSNodA, A]
+  implicit object NSOffsetConfigResolverAP
+    extends NSOffsetConfigResolverA[OffsetAxis.P] {
+    val configItem = "nsBeamA-p"
+  }
+  implicit object NSOffsetConfigResolverAQ
+    extends NSOffsetConfigResolverA[OffsetAxis.Q] {
+    val configItem = "nsBeamA-q"
+  }
+  sealed trait NSOffsetConfigResolverB[A <: OffsetAxis]
+    extends NSOffsetConfigResolver[OffsetType.NSNodB, A]
+  implicit object NSOffsetConfigResolverBP
+    extends NSOffsetConfigResolverB[OffsetAxis.P] {
+    val configItem = "nsBeamB-p"
+  }
+  implicit object NSOffsetConfigResolverBQ
+    extends NSOffsetConfigResolverB[OffsetAxis.Q] {
+    val configItem = "nsBeamB-q"
+  }
 }
 
-case class Offset[T <: OffsetType, A <: OffsetAxis](value: Double)
+case class Offset[T <: OffsetType, A <: OffsetAxis](value: Double) extends AnyVal
 case object Offset {
   def Zero[T <: OffsetType, A <: OffsetAxis]: Offset[T, A] =
     Offset[T, A](0.0)
