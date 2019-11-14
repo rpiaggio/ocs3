@@ -4,7 +4,6 @@
 package seqexec.model
 
 import cats.tests.CatsSuite
-import gem.arb.ArbEnumerated._
 import gsp.math.laws.discipline.FormatTests
 import gsp.math.arb.ArbOffset._
 import gsp.math.arb.ArbAngle._

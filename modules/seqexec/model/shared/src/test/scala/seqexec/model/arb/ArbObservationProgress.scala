@@ -4,7 +4,7 @@
 package seqexec.model.arb
 
 import gem.Observation
-import gem.arb.ArbEnumerated._
+import gem.arb.ArbEnumerated
 import gem.arb.ArbObservation._
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary._
@@ -16,7 +16,7 @@ import seqexec.model._
 import seqexec.model.ObserveStage.observeStageEnum
 import squants.time._
 
-trait ArbObservationProgress {
+trait ArbObservationProgress extends ArbEnumerated {
   implicit val arbObservationProgress: Arbitrary[ObservationProgress] =
     Arbitrary {
       for {

@@ -9,9 +9,10 @@ import org.scalacheck.Cogen
 import org.scalacheck.Gen
 import org.scalacheck.Arbitrary._
 import gem.Observation
-import gem.arb.ArbEnumerated._
 import gsp.math.arb.ArbTime
 import java.time.Instant
+
+import gem.arb.ArbEnumerated
 import seqexec.model.enum._
 import seqexec.model.dhs._
 import seqexec.model.QueueManipulationOp._
@@ -21,7 +22,7 @@ import seqexec.model.arb.ArbTelescopeGuideConfig._
 import seqexec.model.arb.ArbDhsTypes._
 import seqexec.model.arb.ArbObservationProgress._
 
-trait SequenceEventsArbitraries extends ArbTime with ArbNotification {
+trait SequenceEventsArbitraries extends ArbTime with ArbNotification with ArbEnumerated {
 
   implicit val gcuArb = Arbitrary[GuideConfigUpdate] {
     arbitrary[TelescopeGuideConfig].map(GuideConfigUpdate.apply)
