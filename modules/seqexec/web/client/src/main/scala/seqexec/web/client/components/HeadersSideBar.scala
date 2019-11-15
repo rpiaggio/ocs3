@@ -150,8 +150,8 @@ object HeadersSideBar {
       val instrument = p.selectedObserver
         .map(i => i.fold(_ => "Daycal", _.instrument.show))
         .getOrElse("Default")
-      val obsCompleted =
-        p.selectedObserver.map(_.fold(_ => false, _.completed)).getOrElse(false)
+//      val obsCompleted =
+//        p.selectedObserver.map(_.fold(_ => false, _.completed)).getOrElse(false)
       val observerField = s"Observer - $instrument"
       <.div(
         ^.cls := "ui secondary segment",
@@ -181,7 +181,10 @@ object HeadersSideBar {
                               "observer",
                               observerEV,
                               placeholder = "Observer...",
-                              disabled    = !enabled || obsCompleted,
+
+//                              disabled    = !enabled || obsCompleted,
+
+                              disabled    = true,
                               onBlur      = _ => submitIfChangedOb)
               )
             )

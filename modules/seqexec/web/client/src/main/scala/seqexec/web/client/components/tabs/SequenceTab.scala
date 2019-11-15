@@ -34,7 +34,7 @@ object SequenceTab {
   final case class Props(router:             RouterCtl[SeqexecPages],
                          tab:                AvailableTab,
                          loggedIn:           Boolean,
-                         defaultObserver:    Observer,
+                         observer:           Observer,
                          runningInstruments: List[Instrument])
   final case class State(loading:            Boolean)
 
@@ -49,7 +49,7 @@ object SequenceTab {
     e.preventDefaultCB *>
       e.stopPropagationCB *>
       b.setState(State(loading = true)) *>
-      SeqexecCircuit.dispatchCB(LoadSequence(b.props.defaultObserver, inst, id))
+      SeqexecCircuit.dispatchCB(LoadSequence(b.props.observer, inst, id))
 
   private def showSequence(p: Props, page: SeqexecPages)(
     e:                        ReactEvent): Callback =

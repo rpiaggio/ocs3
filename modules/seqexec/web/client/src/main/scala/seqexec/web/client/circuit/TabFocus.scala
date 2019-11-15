@@ -12,13 +12,13 @@ import seqexec.web.client.model._
 
 final case class TabFocus(
   canOperate:      Boolean,
-  tabs:            NonEmptyList[Either[CalibrationQueueTabActive, AvailableTab]],
-  defaultObserver: Observer
+  tabs      :      NonEmptyList[Either[CalibrationQueueTabActive, AvailableTab]],
+  observer  :      Observer
 )
 
 object TabFocus {
   implicit val eq: Eq[TabFocus] =
-    Eq.by(x => (x.canOperate, x.tabs, x.defaultObserver))
+    Eq.by(x => (x.canOperate, x.tabs, x.observer))
 
   val tabFocusG: Getter[SeqexecAppRootModel, TabFocus] = {
     val getter = SeqexecAppRootModel.uiModel.composeGetter(

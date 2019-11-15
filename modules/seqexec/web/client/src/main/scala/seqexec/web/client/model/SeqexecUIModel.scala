@@ -39,7 +39,12 @@ final case class SeqexecUIModel(
   globalLog:          GlobalLog,
   sequencesOnDisplay: SequencesOnDisplay,
   appTableStates:     AppTableStates,
+
+
   defaultObserver:    Observer,
+  currentObserver:    Option[Observer],
+
+
   notification:       UserNotificationState,
   queues:             CalibrationQueues,
   obsProgress:        AllObservationsProgressState,
@@ -56,6 +61,7 @@ object SeqexecUIModel {
     SequencesOnDisplay.Empty,
     AppTableStates.Initial,
     Observer(""),
+    None,
     UserNotificationState.Empty,
     CalibrationQueues.Default,
     AllObservationsProgressState.Empty,
@@ -81,4 +87,6 @@ object SeqexecUIModel {
          x.firstLoad))
 
   val defaultObserverG = SeqexecUIModel.defaultObserver.asGetter
+
+  val currentObserverG = SeqexecUIModel.currentObserver.asGetter composeFold(
 }

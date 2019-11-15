@@ -46,7 +46,7 @@ object SeqexecTabs {
                 SequenceTab.Props(p.router,
                                   t,
                                   x().canOperate,
-                                  x().defaultObserver,
+                                  x().observer,
                                   runningInstruments)): VdomNode
             case Left(t) =>
               CalibrationQueueTab(CalibrationQueueTab.Props(p.router, t)): VdomNode
