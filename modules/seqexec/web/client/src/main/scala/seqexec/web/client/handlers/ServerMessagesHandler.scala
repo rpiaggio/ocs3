@@ -236,6 +236,10 @@ class ServerMessagesHandler[M](modelRW: ModelRW[M, WebSocketsFocus])
   val modelUpdateMessage: PartialFunction[Any, ActionResult[M]] = {
     case ServerMessage(s: SeqexecModelUpdate) =>
       val sequences = filterSequences(s.view)
+
+      println(s"PREVIOUS: ${value.resourceRunRequested}")
+
+
       val resourceRunRequested =
         SequencesQueue.sessionQueueT[SequenceView]
           .getAll(sequences)
@@ -252,7 +256,32 @@ class ServerMessagesHandler[M](modelRW: ModelRW[M, WebSocketsFocus])
                     .map((resource, _))
                 }).flatten
               }.toMap.mapValues(SortedMap(_:_*))
-      updated(value.copy(sequences = sequences, resourceRunRequested = resourceRunRequested))
+      // [SEQNG-1139] If a subsystem is now Running in a sequence, it should become Idle in all other sequences.
+      val runningSubsystems = resourceRunRequested.mapValues(_.collect{
+        case (subsystem, ResourceRunOperation.ResourceRunInFlight(_)) => subsystem
+      })
+      val finalSubsystems = resourceRunRequested.map { case (obsId, resources) =>
+        obsId ->
+          resources.map { case (subsystem, status) =>
+              subsystem ->
+                (if(runningSubsystems.exists{ case(otherObsId, subsystems) =>
+                  otherObsId =!= obsId && subsystems.exists(_ === subsystem)
+                })
+                  ResourceRunOperation.ResourceRunIdle
+                else
+                  status)
+          }
+      }
+
+
+      println(s"AFTER   : ${resourceRunRequested}")
+      println(s"RUNNING : ${runningSubsystems}")
+      println(s"FINAL   : ${finalSubsystems}")
+
+
+
+
+      updated(value.copy(sequences = sequences, resourceRunRequested = finalSubsystems))
   }
 
   val sequenceRefreshedMessage: PartialFunction[Any, ActionResult[M]] = {
