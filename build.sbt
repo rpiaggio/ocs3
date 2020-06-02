@@ -263,7 +263,6 @@ lazy val seqexec_web_client = project
       CatsEffect.value,
       ScalaJSDom.value,
       JavaTimeJS.value,
-      Log4s.value,
       ScalaJSReactSemanticUI.value,
       ScalaJSReactVirtualized.value,
       ScalaJSReactClipboard.value,
@@ -271,7 +270,7 @@ lazy val seqexec_web_client = project
       GppUI.value,
       PPrint.value,
       TestLibs.value
-    ) ++ ReactScalaJS.value ++ Diode.value
+    ) ++ ReactScalaJS.value ++ Diode.value ++ Log4CatsLogLevel.value
   )
   .settings(
     buildInfoUsePackageAsPath := true,
@@ -287,6 +286,7 @@ lazy val seqexec_server = project
   .in(file("modules/seqexec/server"))
   .enablePlugins(GitBranchPrompt)
   .enablePlugins(BuildInfoPlugin)
+  .disablePlugins(HydraPlugin)
   .settings(commonSettings: _*)
   .settings(
     scalacOptions += "-Ymacro-annotations",
